@@ -2,11 +2,11 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-    <link rel="stylesheet" href="bootstrap/css/bootstrap.css"/>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="../../bootstrap/css/bootstrap.css"/>
+    <link rel="stylesheet" href="../../css/style.css">
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-    <script src="bootstrap/admin/js/bootstrap.min.js"></script>
+    <script src="../../bootstrap/admin/js/bootstrap.min.js"></script>
 
 </head>
 <body>
@@ -28,7 +28,7 @@ if(isset($_GET["update"])&& isset($_GET["id"])){
     $stmt->execute();
     $stmt->close();
 }
-if (isset($_SESSION['aid']))
+if (isset($_SESSION['id']))
 {
 ?>
 <div class="container">
@@ -118,7 +118,7 @@ if (isset($_SESSION['aid']))
                          }
                          else{
                              $stmt->close();
-                             $query = "insert into support (name,email,password) values(?,?,?)";
+                             $query = "insert into support (name,email,password,designation) values(?,?,?,'support')";
                              $stmt = $conn->prepare($query);
                              $stmt->bind_param("sss", $_POST['name'], $_POST['email'], $_POST['password']);
                              $stmt->execute();
@@ -143,15 +143,16 @@ if (isset($_SESSION['aid']))
                     <th>ID</th>
                     <th>Name</th>
                     <th>Email</th>
+                    <th>Designation</th>
                 </tr>
                 </thead>
                 <tbody>
                 <?php
 
-                $query="Select id,name,email from support";
+                $query="Select id,name,email,designation from support where designation='support'";
                 $stmt = $conn->prepare($query);
                 if($stmt->execute()){
-                    $stmt->bind_result($id,$name,$email);
+                    $stmt->bind_result($id,$name,$email,$designation);
                     while($stmt->fetch()){
                         echo "<tr>
                                         <td>$id</td>
@@ -165,9 +166,10 @@ if (isset($_SESSION['aid']))
                         <?php
                         echo "</td>
                                         <td>$email</td>
+                                        <td>$designation</td>
                                         <td><a class='btn btn-warning' id='upd_btn_$id' href='?id=$id&update=true&name='> Update </a>
                                         <a class='btn btn-danger' href='?id=$id&delete=true'> Delete </a></td>
-                                      </tr>";
+                                        </tr>";
                     }
                 }else{
                     echo '<h3> error occurred</h3>';
@@ -192,9 +194,9 @@ if (isset($_SESSION['aid']))
 
     <?php
     }
-    else if (!isset($_SESSION['aid']))
+    else if (!isset($_SESSION['id']))
     {
-        header("location:adminlogin.php");
+        header("location:../");
     }
 
     ?>
@@ -205,7 +207,7 @@ if (isset($_SESSION['aid']))
     $(document).ready(function(){
         $("#exit").click(function(){
             var exit = confirm("Are You Sure You Want To Leave This Page?");
-            if(exit==true){window.location = 'adminlogin.php?logout=true';}
+            if(exit==true){window.location = '../?logout=true';}
         });
     });
 

@@ -20,7 +20,7 @@ function loginForm() {
    ';
 }
 
-
+$tkid=0;
 
 if (isset ( $_POST ['enter'] )) {
     if ($_POST ['name'] != "") {
@@ -157,7 +157,7 @@ $("#submitmsg").click(function(){
         if(!clientmsg=="")
         {
 
-            $.post("post.php", {text: clientmsg});
+            $.post("post.php", {text: clientmsg, side: 'std', tkid: <?php echo gettokenid(); ?>, senderid: <?php echo $_SESSION['uid'];?>});
             loadmessages;
 
 
@@ -179,7 +179,29 @@ $('div').animate({scrollTop: height});
 </script>
 <?php
 }
-function loadmessages()
+// function loadmessages()
+// {
+//     $conn= mysqli_connect("localhost","root","","livechat");
+//     $query="select id from tokens where uid=?";
+//     $stmt=$conn->prepare($query);
+//     $stmt->bind_param("i",$_SESSION['uid']);
+//     $stmt->execute();
+//     $stmt->bind_result($tkid);
+//     $stmt->fetch();
+//     $stmt->close();
+
+//     $query="select createdAt, message from chat where token=?";
+//     $stmt=$conn->prepare($query);
+//     $stmt->bind_param("i",$tkid);
+//     $stmt->execute();
+//     $stmt->bind_result($createdat,$message);
+//     while($stmt->fetch())
+//     {
+//         echo '<div class="msgln">'.$createdat.' <b>'.$_SESSION['name'].'</b>: '.stripslashes(htmlspecialchars($message)).'<br></div>';   
+//     }
+//     $stmt->close();
+// }
+function gettokenid()
 {
     $conn= mysqli_connect("localhost","root","","livechat");
     $query="select id from tokens where uid=?";
@@ -189,18 +211,73 @@ function loadmessages()
     $stmt->bind_result($tkid);
     $stmt->fetch();
     $stmt->close();
-
-    $query="select createdAt, message from chat where token=?";
+    return $tkid;
+}
+function loadmessages()
+{
+    $conn= mysqli_connect("localhost","root","","livechat");   
+    $tkid=gettokenid();
+    $query="select senderid from chat where token=?";
     $stmt=$conn->prepare($query);
     $stmt->bind_param("i",$tkid);
     $stmt->execute();
-    $stmt->bind_result($createdat,$message);
+    $stmt->bind_result($senderid);
     while($stmt->fetch())
     {
-        echo '<div class="msgln">'.$createdat.' <b>'.$_SESSION['name'].'</b>: '.stripslashes(htmlspecialchars($message)).'<br></div>';   
+        if(!isset($supid)||!isset($stdid))
+        {
+            if(substr($senderid,0,3)=="sup")
+            {
+                $supid=substr($senderid,3);
+            }
+            else if(substr($senderid,0,3)=="std")
+            {
+                $stdid=substr($senderid,3);
+            }
+        }
+        else
+        {
+            break;
+        }
+    }
+    $stmt->close();
+
+    $query="select name from support where id=?";
+    $stmt=$conn->prepare($query);
+    $stmt->bind_param("i",$supid);
+    $stmt->execute();
+    $stmt->bind_result($supname);
+    $stmt->fetch();
+    $stmt->close();
+
+    $query="select name from students where id=?";
+    $stmt=$conn->prepare($query);
+    $stmt->bind_param("i",$stdid);
+    $stmt->execute();
+    $stmt->bind_result($stdname);
+    $stmt->fetch();
+    $stmt->close();
+
+    $query="select senderid, createdAt, message from chat where token=?";
+    $stmt=$conn->prepare($query);
+    $stmt->bind_param("i",$tkid);
+    $stmt->execute();
+    $stmt->bind_result($senderid, $createdat,$message);
+    while($stmt->fetch())
+    {
+        if(substr($senderid,0,3)=="sup")
+        {
+            $name=$supname;
+        }
+        if(substr($senderid,0,3)=="std")
+        {
+            $name=$stdname;
+        }
+        echo '<div class="msgln">'.$createdat.' <b>'.$name.'</b>: '.stripslashes(htmlspecialchars($message)).'<br></div>';   
     }
     $stmt->close();
 }
+
 ?>
 </body>
 </html>
